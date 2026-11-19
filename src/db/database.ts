@@ -181,8 +181,13 @@ export async function initDatabase(): Promise<void> {
         perfil VARCHAR(100) NOT NULL,
         acao VARCHAR(100) NOT NULL,
         detalhes TEXT,
+        resultado VARCHAR(20) NOT NULL DEFAULT 'sucesso',
         data_hora TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+    await client.query(`
+      ALTER TABLE payroll_approval_logs
+      ADD COLUMN IF NOT EXISTS resultado VARCHAR(20) NOT NULL DEFAULT 'sucesso';
     `);
 
     // Portal de documentos do cliente (SPEC-4.3)

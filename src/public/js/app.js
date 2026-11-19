@@ -6,7 +6,7 @@
 // Estado global da aplicação
 const state = {
   activeTab: 'dashboard',
-  currentRole: localStorage.getItem('user_role') || 'rh_admin',
+  currentRole: localStorage.getItem('user_role') || 'consulta_assistente',
   currentClientId: Number(localStorage.getItem('client_id') || 1),
   currentCompetencia: '2026-11',
   employees: [],
@@ -35,11 +35,8 @@ function setupRoleSelector() {
   selector.addEventListener('change', (e) => {
     state.currentRole = e.target.value;
     localStorage.setItem('user_role', state.currentRole);
-    updateRoleVisuals(state.currentRole);
-    showAlert(`Perfil alternado para: ${state.currentRole === 'rh_admin' ? 'RH / Admin (Acesso Total)' : 'Consulta / Assistente (Dados Mascarados)'}`, 'info');
-
-    // Recarrega os dados da aba atual com a nova regra de mascaramento
-    refreshActiveTabData();
+    // Remove do DOM os dados privilegiados carregados antes da troca de perfil.
+    window.location.reload();
   });
 }
 
@@ -897,7 +894,7 @@ async function loadAuditLogs() {
     const logs = await apiFetch('/api/payroll/audit-logs');
     const tbody = document.getElementById('audit-logs-table-body');
     if (!logs || logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Nenhum log registrado.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Nenhum log registrado.</td></tr>`;
       return;
     }
 
@@ -907,6 +904,7 @@ async function loadAuditLogs() {
         <td class="py-2.5 px-3 font-semibold text-slate-800">${escapeHtml(l.usuario)}</td>
         <td class="py-2.5 px-3"><span class="bg-slate-100 text-slate-700 font-medium px-1.5 py-0.5 rounded">${escapeHtml(l.perfil)}</span></td>
         <td class="py-2.5 px-3 font-semibold text-blue-700">${escapeHtml(l.acao)}</td>
+        <td class="py-2.5 px-3">${escapeHtml(l.resultado || '')}</td>
         <td class="py-2.5 px-3 text-slate-600">${escapeHtml(l.detalhes || '')}</td>
       </tr>
     `).join('');
