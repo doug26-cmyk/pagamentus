@@ -633,6 +633,18 @@ function renderPayrollResults(payroll) {
   document.getElementById('tot-encargos').innerText = formatCurrency(payroll.total_encargos);
   document.getElementById('tot-provisoes').innerText = formatCurrency(payroll.total_provisoes);
 
+  const accountingSummary = document.getElementById('payroll-accounting-summary');
+  if (payroll.lancamento_contabil) {
+    const entry = payroll.lancamento_contabil;
+    const status = entry.status === 'integrado_a_folha' ? 'Integrado à folha' : 'Prévia não persistida';
+    accountingSummary.innerText = `${status} — competência ${entry.competencia}. ` +
+      `Proventos: ${formatCurrency(entry.total_proventos)}; descontos: ${formatCurrency(entry.total_descontos)}; ` +
+      `líquido: ${formatCurrency(entry.total_liquido)}; encargos: ${formatCurrency(entry.total_encargos)}; ` +
+      `provisões: ${formatCurrency(entry.total_provisoes)}.`;
+  } else {
+    accountingSummary.innerText = 'Calcule e grave a folha para associar seus totais contábeis.';
+  }
+
   const statusBadge = document.getElementById('payroll-status-badge');
   const status = payroll.status || 'rascunho';
   statusBadge.innerText = status.toUpperCase();
