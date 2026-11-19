@@ -12,6 +12,7 @@ Uma linha por spec concluída, no estilo Keep a Changelog.
 - SPEC-2.4: Importação de lançamentos em lote por planilha com pré-validação, relatório de erros por linha e opção de desfazer lote.
 - SPEC-5.1: Especificação em revisão de navegação, responsividade, acessibilidade, compatibilidade com navegadores, exportações em formatos abertos e documentação de requisitos de integração.
 - SPEC-4.3: Portal de documentos do cliente com upload, filtros, checklist, confirmação de recebimento, correção e auditoria.
+- SPEC-4.5: Aprovação da folha com trilha de sucesso e tentativas negadas, e restrição de dados salariais e de saúde por perfis simulados.
 
 ### Alterado
 
