@@ -45,6 +45,7 @@ Uma linha por spec concluída, no estilo Keep a Changelog.
 - [SPEC-5.6] API documentada (PR #50, Pablo Eduardo)
 - [SPEC-5.7] Importação e exportação validadas (PR #51, Pablo Eduardo)
 - [SPEC-5.8] Observabilidade e monitoramento (PR #52, Pablo Eduardo)
+- [SPEC-5.9] Desempenho e carga (PR #53, Pablo Eduardo)
 
 ### Alterado
 
