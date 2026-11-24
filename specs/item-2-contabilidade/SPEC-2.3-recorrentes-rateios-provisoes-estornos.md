@@ -2,7 +2,7 @@
 
 | Item | Responsável | Revisor (4º período) | Trello | Status |
 |---|---|---|---|---|
-| 2 – Contabilidade | Ítalo | A definir | A definir | Fazendo |
+| 2 – Contabilidade | @italograu17-ai | 4º período | https://trello.com/c/wbgzApKt | Feito |
 
 ## 1. Contexto e objetivo
 Permitir a criação e utilização de modelos de lançamentos contábeis recorrentes (para geração automatizada de rotinas periódicas como provisões, depreciações e apropriações com rateios) e a execução de estornos contábeis mantendo o estrito vínculo de rastreabilidade com o lançamento original.
@@ -79,6 +79,7 @@ Permitir a criação e utilização de modelos de lançamentos contábeis recorr
 4. **Bloqueio de reestorno (CA-4):** Tentar estornar o mesmo lançamento original uma segunda vez e validar rejeição com mensagem de erro.
 
 ## 10. Evidências (preencher ao concluir)
+- **PR:** https://github.com/joaovitor-webdev/pagamentus/pull/12 (Mesclado na `main`)
 - **CA-1:** Validado no teste `tests/recorrentesRateiosEstornos.test.ts` ("deve cadastrar modelo recorrente e gerar lançamento contábil efetivo"). Status HTTP 201 com lançamento gerado com valor total de R$ 3500,00 e tipo `RECORRENTE`.
 - **CA-2:** Validado no teste `tests/recorrentesRateiosEstornos.test.ts` ("deve gerar lançamento de estorno invertendo débitos/créditos e com lancamentoOrigemId"). Status HTTP 201, `lancamentoOrigemId` apontando para o original e contas com partidas invertidas (débito original virou crédito e vice-versa).
 - **CA-3:** Validado no teste `tests/recorrentesRateiosEstornos.test.ts` ("deve gerar lançamento com rateio em múltiplos centros de custo mantendo partidas dobradas"). Status HTTP 201 gerando 2 débitos rateados (R$ 6.000,00 e R$ 4.000,00 em centros de custo `CC-COM` e `CC-FAB`) contra crédito de R$ 10.000,00 balanceado.

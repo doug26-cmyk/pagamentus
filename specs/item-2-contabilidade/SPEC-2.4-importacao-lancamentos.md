@@ -2,7 +2,7 @@
 
 | Item | Responsável | Revisor (4º período) | Trello | Status |
 |---|---|---|---|---|
-| 2 – Contabilidade | Ítalo | A definir | https://trello.com/c/piZHXcEu | Fazendo |
+| 2 – Contabilidade | @italograu17-ai | 4º período | https://trello.com/c/LYRflCPc | Feito |
 
 ## 1. Contexto e objetivo
 Permitir a importação em lote de lançamentos contábeis a partir de arquivos/planilhas estruturadas, fornecendo rotina de pré-validação antes da gravação definitiva, emissão de relatório detalhado de erros por linha/registro e capacidade de desfazimento (rollback/exclusão) integral de um lote importado.
@@ -74,6 +74,7 @@ Permitir a importação em lote de lançamentos contábeis a partir de arquivos/
 4. **Desfazer lote (CA-4):** Chamar rota de desfazimento e comprovar que nenhum lançamento daquele `loteId` permaneceu na listagem da empresa.
 
 ## 10. Evidências (preencher ao concluir)
+- **PR:** https://github.com/joaovitor-webdev/pagamentus/pull/12 (Mesclado na `main`)
 - **CA-1:** Validado no teste `tests/importacaoLancamentos.test.ts` ("deve pré-validar lote sem erros e retornar totalizadores"). Retorno HTTP 200, `valido: true`, 0 erros e totalizadores corretos.
 - **CA-2:** Validado no teste `tests/importacaoLancamentos.test.ts` ("deve apontar erros por linha ao encontrar conta inexistente, sintética e desbalanceamento"). Retorno HTTP 422 discriminando as linhas com falhas e mensagens detalhadas de cada inconsistência.
 - **CA-3:** Validado no teste `tests/importacaoLancamentos.test.ts` ("deve importar e persistir lançamentos associados ao lote_id"). Retorno HTTP 201 com criação de lote de importação com status `PROCESSADO` e todos os lançamentos persistidos vinculados ao respectivo `loteId`.

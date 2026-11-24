@@ -69,6 +69,15 @@ describe('SPEC-2.2: Lançamentos Manuais com Partidas Dobradas (RF-007, RF-008, 
       ativo: false,
     });
     contaInativaId = contaInativa.id;
+
+    // 5. Centro de custo ativo para os testes de lançamento com vínculo
+    await instancia.centroCustoService.cadastrarDimensao({
+      id: 'CC-ADM',
+      empresaId,
+      codigo: 'CC-ADM',
+      nome: 'Centro de Custo Administrativo',
+      tipo: 'CENTRO_CUSTO',
+    });
   });
 
   /**
