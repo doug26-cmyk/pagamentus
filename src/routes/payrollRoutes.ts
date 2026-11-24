@@ -4,7 +4,8 @@ import {
   calculateMonthlyPayroll,
   calculateVacation,
   calculate13Salary,
-  approvePayroll
+  approvePayroll,
+  registerDeniedPayrollApproval
 } from '../services/payrollService';
 import { maskObject } from '../services/maskingService';
 import { Employee } from '../types';
@@ -235,7 +236,19 @@ router.get('/receipt/:competencia/:employeeId', async (req: Request, res: Respon
 // POST /api/payroll/approve - Aprovação formal da folha (RF-056)
 router.post('/approve', async (req: Request, res: Response): Promise<void> => {
   try {
+    const { competencia, status, justificativa, usuario } = req.body;
+    if (typeof competencia !== 'string' || !competencia) {
+      res.status(400).json({ error: 'Competência é obrigatória.' });
+      return;
+    }
+
     if (!req.isRhAdmin) {
+      await registerDeniedPayrollApproval(
+        competencia,
+        usuario || req.userRole || 'não identificado',
+        req.userRole || 'não autorizado',
+        req.organizationId || 1
+      );
       res.status(403).json({
         error: 'Acesso Negado: Apenas usuários autorizados com perfil RH/Admin podem aprovar ou fechar a folha (RF-056).'
       });
@@ -243,12 +256,6 @@ router.post('/approve', async (req: Request, res: Response): Promise<void> => {
     }
 
     const orgId = req.organizationId || 1;
-    const { competencia, status, justificativa, usuario } = req.body;
-    if (!competencia) {
-      res.status(400).json({ error: 'Competência é obrigatória.' });
-      return;
-    }
-
     const novoStatus = status || 'aprovada';
     const user = usuario || 'Douglas (Gestor de RH)';
 
@@ -262,6 +269,11 @@ router.post('/approve', async (req: Request, res: Response): Promise<void> => {
 // GET /api/payroll/audit-logs - Trilha de aprovação e auditoria
 router.get('/audit-logs', async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.isRhAdmin) {
+      res.status(403).json({ error: 'Acesso negado à trilha de auditoria.' });
+      return;
+    }
+
     const orgId = req.organizationId || 1;
     const result = await query(
       'SELECT * FROM payroll_approval_logs WHERE organization_id = $1 ORDER BY id DESC LIMIT 50',

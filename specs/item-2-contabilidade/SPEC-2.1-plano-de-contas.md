@@ -2,7 +2,7 @@
 
 | Item | Responsável | Revisor (4º período) | Trello | Status |
 |---|---|---|---|---|
-| 2 – Contabilidade | Ítalo | A definir | https://trello.com/c/piZHXcEu | Revisando |
+| 2 – Contabilidade | @italograu17-ai | 4º período | https://trello.com/c/piZHXcEu | Feito |
 
 ## 1. Contexto e objetivo
 Permitir a estruturação e manutenção do plano de contas contábil configurável por empresa, definindo a hierarquia entre contas sintéticas (agrupadoras) e analíticas (escriturais), garantindo que apenas contas analíticas estejam aptas a receber lançamentos contábeis.
@@ -71,6 +71,7 @@ Permitir a estruturação e manutenção do plano de contas contábil configurá
 5. Tentar cadastrar uma conta com código já existente na mesma empresa e validar mensagem de erro de duplicidade.
 
 ## 10. Evidências (preencher ao concluir)
+- **PR:** https://github.com/joaovitor-webdev/pagamentus/pull/6 (Mesclado na `main`)
 - **CA-1:** Validado no teste `tests/planoContas.test.ts` ("deve registrar com sucesso uma conta sintética/analítica vinculada à empresa"). Status HTTP 201 com payload contendo `codigo`, `nivel`, `tipo`, `natureza`, `classificacao` e `empresaId`.
 - **CA-2:** Validado no teste `tests/planoContas.test.ts` ("deve rejeitar tentativa de validar conta sintética para lançamento contábil"). Bloqueado com status HTTP 422 e mensagem `Apenas contas analíticas recebem lançamentos`.
 - **CA-3:** Validado no teste `tests/planoContas.test.ts` ("deve autorizar com sucesso conta analítica ativa para receber lançamento"). Retorno status HTTP 200 com mensagem `Conta analítica válida para receber lançamento.`

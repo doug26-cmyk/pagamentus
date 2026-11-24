@@ -526,32 +526,62 @@ export async function approvePayroll(
   justificativa?: string,
   organizationId: number = 1
 ) {
-  const res = await query(
-    'SELECT * FROM payroll_runs WHERE organization_id = $1 AND competencia = $2 AND tipo = $3',
-    [organizationId, competencia, 'mensal']
-  );
-  if (res.rows.length === 0) {
-    throw new Error('Folha não encontrada para esta competência. Calcule a folha primeiro.');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const res = await client.query(
+      'SELECT * FROM payroll_runs WHERE organization_id = $1 AND competencia = $2 AND tipo = $3 FOR UPDATE',
+      [organizationId, competencia, 'mensal']
+    );
+    if (res.rows.length === 0) {
+      throw new Error('Folha não encontrada para esta competência. Calcule a folha primeiro.');
+    }
+
+    const run = res.rows[0];
+    await client.query(
+      'UPDATE payroll_runs SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE organization_id = $2 AND id = $3',
+      [novoStatus, organizationId, run.id]
+    );
+
+    await client.query(`
+      INSERT INTO payroll_approval_logs (
+        organization_id, payroll_run_id, competencia, usuario, perfil, acao, detalhes, resultado
+      )
+      VALUES ($1, $2, $3, $4, 'RH/Admin', $5, $6, 'sucesso')
+    `, [
+      organizationId,
+      run.id,
+      competencia,
+      usuario,
+      `Status alterado para ${novoStatus.toUpperCase()}`,
+      justificativa || `Aprovação formal da competência ${competencia}`
+    ]);
+
+    await client.query('COMMIT');
+    return { success: true, status: novoStatus };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
+}
 
-  const run = res.rows[0];
-
-  await query(
-    'UPDATE payroll_runs SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-    [novoStatus, run.id]
-  );
-
+export async function registerDeniedPayrollApproval(
+  competencia: string,
+  usuario: string,
+  perfil: string,
+  organizationId: number = 1
+): Promise<void> {
   await query(`
-    INSERT INTO payroll_approval_logs (organization_id, payroll_run_id, competencia, usuario, perfil, acao, detalhes)
-    VALUES ($1, $2, $3, $4, 'RH/Admin', $5, $6)
-  `, [
-    organizationId,
-    run.id,
-    competencia,
-    usuario,
-    `Status alterado para ${novoStatus.toUpperCase()}`,
-    justificativa || `Aprovação formal da competência ${competencia}`
-  ]);
-
-  return { success: true, status: novoStatus };
+    INSERT INTO payroll_approval_logs (
+      organization_id, payroll_run_id, competencia, usuario, perfil, acao, detalhes, resultado
+    )
+    VALUES (
+      $1,
+      (SELECT id FROM payroll_runs WHERE organization_id = $1 AND competencia = $2 AND tipo = 'mensal'),
+      $2, $3, $4, 'Tentativa de aprovação negada', 'Permissão insuficiente para aprovar a folha.', 'negado'
+    )
+  `, [organizationId, competencia, usuario, perfil]);
 }

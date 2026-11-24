@@ -1,6 +1,7 @@
 import { CriarLancamentoDTO, LancamentoContabil, IPartidaContabil } from '../models/LancamentoContabil';
 import { ILancamentoContabilRepository } from '../repositories/LancamentoContabilRepository';
 import { IPeriodoContabilRepository } from '../repositories/PeriodoContabilRepository';
+import { ICentroCustoRepository } from '../repositories/CentroCustoRepository';
 import { PlanoContasService } from './PlanoContasService';
 
 export interface EstornarLancamentoDTO {
@@ -17,7 +18,8 @@ export class LancamentoContabilService {
   constructor(
     private readonly lancamentoRepo: ILancamentoContabilRepository,
     private readonly periodoRepo: IPeriodoContabilRepository,
-    private readonly planoContasService: PlanoContasService
+    private readonly planoContasService: PlanoContasService,
+    private readonly centroCustoRepo?: ICentroCustoRepository
   ) {}
 
   /**
@@ -37,6 +39,28 @@ export class LancamentoContabilService {
     const statusPeriodo = await this.periodoRepo.obterStatus(dto.empresaId, dto.competencia);
     if (statusPeriodo === 'ENCERRADO') {
       throw new Error(`O período contábil da competência ${dto.competencia} está encerrado. Lançamentos não são permitidos.`);
+    }
+
+    // 2.1 Validação opcional de centro de custo cadastrado e ativo (SPEC-2.6 / RF-014)
+    if (this.centroCustoRepo) {
+      const validarCc = async (ccId: string) => {
+        const dimensao = await this.centroCustoRepo!.buscarPorId(ccId);
+        if (!dimensao || dimensao.empresaId !== dto.empresaId) {
+          throw new Error(`Centro de custo '${ccId}' não encontrado para a empresa.`);
+        }
+        if (!dimensao.ativo) {
+          throw new Error(`Centro de custo '${dimensao.codigo}' está inativo.`);
+        }
+      };
+
+      if (dto.centroCustoId) {
+        await validarCc(dto.centroCustoId);
+      }
+      for (const partida of dto.partidas) {
+        if (partida.centroCustoId) {
+          await validarCc(partida.centroCustoId);
+        }
+      }
     }
 
     // 3. Validação das contas contábeis e dos valores individuais das partidas (RF-008 / CA-4 / CA-5)

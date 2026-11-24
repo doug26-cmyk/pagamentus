@@ -1,22 +1,34 @@
-import { Pool, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import dotenv from 'dotenv';
+import { resolveDatabaseEnvironment } from '../database/databaseEnvironment';
 
 dotenv.config();
 
-const isTest = process.env.NODE_ENV === 'test';
-const targetDb = isTest ? 'pagamentus_test' : 'pagamentus_prod';
+let poolInstance: Pool | undefined;
 
-// Configura pool suportando tanto URL quanto conexão local por socket /tmp ou TCP
-const poolConfig = process.env.DATABASE_URL
-  ? { connectionString: isTest ? (process.env.DATABASE_URL_TEST || process.env.DATABASE_URL) : process.env.DATABASE_URL }
-  : {
-      host: process.env.PGHOST || '/tmp',
-      port: parseInt(process.env.PGPORT || '5432', 10),
-      database: targetDb,
-      user: process.env.PGUSER || 'doug12',
-    };
+function getPool(): Pool {
+  if (!poolInstance) {
+    poolInstance = new Pool({
+      connectionString: resolveDatabaseEnvironment().connectionString,
+    });
+  }
+  return poolInstance;
+}
 
-export const pool = new Pool(poolConfig);
+export const pool = {
+  query<T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+    return getPool().query<T>(text, params);
+  },
+  connect(): Promise<PoolClient> {
+    return getPool().connect();
+  },
+  async end(): Promise<void> {
+    if (poolInstance) {
+      await poolInstance.end();
+      poolInstance = undefined;
+    }
+  },
+};
 
 export async function query<T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
   return pool.query<T>(text, params);
@@ -181,8 +193,75 @@ export async function initDatabase(): Promise<void> {
         perfil VARCHAR(100) NOT NULL,
         acao VARCHAR(100) NOT NULL,
         detalhes TEXT,
+        resultado VARCHAR(20) NOT NULL DEFAULT 'sucesso',
         data_hora TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+    await client.query(`
+      ALTER TABLE payroll_approval_logs
+      ADD COLUMN IF NOT EXISTS resultado VARCHAR(20) NOT NULL DEFAULT 'sucesso';
+    `);
+
+    // Portal de documentos do cliente (SPEC-4.3)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS client_documents (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id INTEGER NOT NULL,
+        client_id INTEGER NOT NULL,
+        exercise VARCHAR(4),
+        competence VARCHAR(7),
+        type VARCHAR(100) NOT NULL,
+        process VARCHAR(255),
+        file_name VARCHAR(255) NOT NULL,
+        content_type VARCHAR(255),
+        file_size INTEGER NOT NULL,
+        file_content BYTEA NOT NULL,
+        status VARCHAR(30) NOT NULL DEFAULT 'recebido',
+        uploaded_by VARCHAR(150),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS client_document_requests (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id INTEGER NOT NULL,
+        client_id INTEGER NOT NULL,
+        exercise VARCHAR(4),
+        competence VARCHAR(7),
+        type VARCHAR(100) NOT NULL,
+        process VARCHAR(255),
+        title VARCHAR(255) NOT NULL,
+        comments TEXT,
+        status VARCHAR(30) NOT NULL DEFAULT 'pendente',
+        document_id BIGINT REFERENCES client_documents(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS client_document_audit (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id INTEGER NOT NULL,
+        client_id INTEGER,
+        document_id BIGINT,
+        user_name VARCHAR(150) NOT NULL,
+        operation VARCHAR(100) NOT NULL,
+        result VARCHAR(30) NOT NULL,
+        details TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS ix_client_documents_org_client
+        ON client_documents (organization_id, client_id);
+      CREATE INDEX IF NOT EXISTS ix_client_documents_filters
+        ON client_documents (organization_id, client_id, exercise, competence, type, process);
+      CREATE INDEX IF NOT EXISTS ix_client_document_requests_org_client
+        ON client_document_requests (organization_id, client_id, status);
     `);
 
     // Portal de documentos do cliente (SPEC-4.3)
