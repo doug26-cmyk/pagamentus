@@ -64,6 +64,22 @@ describe('SPEC-2.3: Recorrentes, Rateios, Provisões e Estornos (RF-009)', () =>
       classificacao: 'PASSIVO',
     });
     contaFornecedorEnergiaId = c4.id;
+
+    // Cadastra centros de custo ativos usados nos modelos de rateio
+    await instancia.centroCustoService.cadastrarDimensao({
+      id: 'CC-COM',
+      empresaId,
+      codigo: 'CC-COM',
+      nome: 'Centro de Custo Comercial',
+      tipo: 'CENTRO_CUSTO',
+    });
+    await instancia.centroCustoService.cadastrarDimensao({
+      id: 'CC-FAB',
+      empresaId,
+      codigo: 'CC-FAB',
+      nome: 'Centro de Custo Fabril',
+      tipo: 'CENTRO_CUSTO',
+    });
   });
 
   /**

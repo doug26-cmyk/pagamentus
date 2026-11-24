@@ -2,7 +2,7 @@
 
 | Item | Responsável | Revisor (4º período) | Trello | Status |
 |---|---|---|---|---|
-| 2 – Contabilidade | Ítalo | A definir | A definir | Fazendo |
+| 2 – Contabilidade | @italograu17-ai | 4º período | https://trello.com/c/tSPGBhjF | Feito |
 
 ## 1. Contexto e objetivo
 Permitir o registro de lançamentos contábeis manuais estruturados pelo método das partidas dobradas (débitos iguais a créditos), assegurando a consistência contábil antes da gravação através da validação obrigatória de balanceamento, contas analíticas ativas e período contábil aberto.
@@ -90,6 +90,7 @@ Permitir o registro de lançamentos contábeis manuais estruturados pelo método
 5. **Valor inconsistente (CA-5):** Enviar partida com valor 0 ou negativo. Verificar recusa por inconsistência de valores.
 
 ## 10. Evidências (preencher ao concluir)
+- **PR:** https://github.com/joaovitor-webdev/pagamentus/pull/12 (Mesclado na `main`)
 - **CA-1:** Validado no teste `tests/lancamentosContabeis.test.ts` ("deve registrar com sucesso um lançamento contábil balanceado"). Status HTTP 201 com payload consolidado, IDs vinculados e valor total igual a R$ 5000,00.
 - **CA-2:** Validado no teste `tests/lancamentosContabeis.test.ts` ("deve rejeitar lançamento onde débitos são diferentes de créditos"). Bloqueado com status HTTP 400 informando a diferença de R$ 500,00, sem persistir nenhuma partida no banco.
 - **CA-3:** Validado no teste `tests/lancamentosContabeis.test.ts` ("deve rejeitar lançamento quando o período contábil estiver encerrado"). Retorno HTTP 400 com mensagem explicativa de período encerrado.

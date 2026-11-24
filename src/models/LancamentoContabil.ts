@@ -29,13 +29,16 @@ export interface ILancamentoContabil {
   partidas: IPartidaContabil[];
 }
 
-export type StatusPeriodoContabil = 'ABERTO' | 'ENCERRADO';
+export type StatusPeriodoContabil = 'ABERTO' | 'EM_FECHAMENTO' | 'ENCERRADO';
 
 export interface IPeriodoContabil {
   id: string;
   empresaId: string;
   competencia: string; // YYYY-MM
   status: StatusPeriodoContabil;
+  atualizadoEm?: Date;
+  ultimoUsuarioId?: string;
+  justificativaUltimaAlteracao?: string;
 }
 
 export interface CriarPartidaDTO {
